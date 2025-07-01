@@ -21,9 +21,11 @@ fn main() -> Result<()> {
     if matches.get_flag("update") {
         println!("インデックスを更新中...");
         let indexer = Indexer::new(db);
-        // テスト用に現在のディレクトリをインデックス
-        let current_dir = std::env::current_dir()?;
-        indexer.build_index(&current_dir.to_string_lossy())?;
+        // ホームディレクトリをインデックス
+        let home_dir = dirs::home_dir()
+            .ok_or_else(|| anyhow::anyhow!("ホームディレクトリが見つかりません"))?;
+        println!("検索対象: {}", home_dir.display());
+        indexer.build_index(&home_dir.to_string_lossy())?;
         println!("インデックス更新完了");
         return Ok(());
     }
@@ -54,12 +56,13 @@ fn main() -> Result<()> {
 
     if matches.get_flag("watch") {
         println!("ファイル監視モード開始...");
-        let current_dir = std::env::current_dir()?;
+        let home_dir = dirs::home_dir()
+            .ok_or_else(|| anyhow::anyhow!("ホームディレクトリが見つかりません"))?;
         
         let (mut watcher, rx) = FileWatcher::new(db)?;
-        watcher.watch(&current_dir)?;
+        watcher.watch(&home_dir)?;
         
-        println!("監視中: {} (Ctrl+Cで終了)", current_dir.display());
+        println!("監視中: {} (Ctrl+Cで終了)", home_dir.display());
         println!("ファイルの作成・削除・変更を自動的にインデックスに反映します");
         
         loop {
